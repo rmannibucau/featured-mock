@@ -84,16 +84,20 @@ class FeaturedHandler extends SimpleChannelInboundHandler<FullHttpRequest> imple
     }
 
     private static InputStream findResource(final FullHttpRequest request, final String ext) {
-        final String uri = request.getUri();
-
-        String path;
-        if (uri.endsWith("/")) {
-            path = uri.substring(0, uri.length() - 1) + ext;
-        } else {
-            path = uri + ext;
-        }
+        String path = request.getUri();
         if (path.startsWith("/")) {
             path = path.substring(1);
+        }
+        if (path.contains("?")) {
+            path = path.substring(0, path.indexOf('?'));
+        }
+        if (path.contains("#")) {
+            path = path.substring(0, path.indexOf('#'));
+        }
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1) + ext;
+        } else {
+            path = path + ext;
         }
 
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();

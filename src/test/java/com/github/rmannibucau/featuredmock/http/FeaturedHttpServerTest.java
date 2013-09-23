@@ -32,6 +32,11 @@ public class FeaturedHttpServerTest {
     }
 
     @Test
+    public void jsonWithQuery() throws Exception {
+        assertURL("http://localhost:1234/foo?a=b", "{ \"json\": \"great\" }");
+    }
+
+    @Test
     public void xml() throws Exception {
         assertURL("http://localhost:1234/bar", "<xml />");
     }
