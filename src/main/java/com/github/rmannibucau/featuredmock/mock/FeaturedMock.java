@@ -1,10 +1,10 @@
 package com.github.rmannibucau.featuredmock.mock;
 
 import com.github.rmannibucau.featuredmock.mock.unmarshaller.Unmarshaller;
+import com.github.rmannibucau.featuredmock.util.Extensions;
+import com.github.rmannibucau.featuredmock.util.IOs;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -42,9 +42,7 @@ public final class FeaturedMock {
         // no-op
     }
 
-    private static class FeaturedMockHandler implements InvocationHandler {
-        private static final String[] EXTENSIONS = { ".xml", ".json", ".yml" };
-
+    private static class FeaturedMockHandler implements InvocationHandler, Extensions {
         private final Unmarshaller[] unmarshallers;
 
         public FeaturedMockHandler(final Unmarshaller[] unmarshallers) {
@@ -62,30 +60,21 @@ public final class FeaturedMock {
                     continue;
                 }
 
-                final String slurp;
+                final byte[] slurp;
                 try {
-                    slurp = slurp(is);
+                    slurp = IOs.slurp(is);
                 } finally {
                     is.close();
                 }
 
                 for (final Unmarshaller unmarshaller : unmarshallers) {
                     if (unmarshaller.accept(extension)) {
-                        return unmarshaller.unmarshall(method.getReturnType(), new ByteArrayInputStream(slurp.getBytes()));
+                        return unmarshaller.unmarshall(method.getReturnType(), new ByteArrayInputStream(slurp));
                     }
                 }
             }
 
             return null; // null is the default, let it be called, it is just not yet mocked
-        }
-
-        private static String slurp(final InputStream is) throws IOException {
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
-            int r;
-            while ((r = is.read()) != -1) {
-                baos.write(r);
-            }
-            return new String(baos.toByteArray());
         }
     }
 }
