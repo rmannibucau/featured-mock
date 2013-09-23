@@ -7,26 +7,27 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class JaxbUnmarshaller implements Unmarshaller {
-    private static final ConcurrentMap<Class<?>, JAXBContext> CACHE = new ConcurrentHashMap<Class<?>, JAXBContext>();
+    private static final ConcurrentMap<Type, JAXBContext> CACHE = new ConcurrentHashMap<Type, JAXBContext>();
 
     @Override
-    public <T> T unmarshall(final Class<T> clazz, final InputStream is) throws IOException {
+    public Object unmarshall(final Type clazz, final InputStream is) throws IOException {
         try {
             JAXBContext ctx = CACHE.get(clazz);
             if (ctx == null) {
-                ctx = JAXBContext.newInstance(clazz);
+                ctx = JAXBContext.newInstance(Class.class.cast(clazz));
                 CACHE.putIfAbsent(clazz, ctx);
             }
 
             final Object obj = ctx.createUnmarshaller().unmarshal(is);
             if (JAXBElement.class.isInstance(obj)) {
-                return ((JAXBElement<T>) obj).getValue();
+                return JAXBElement.class.cast(obj).getValue();
             }
-            return clazz.cast(obj);
+            return obj;
         } catch (final JAXBException e) {
             e.printStackTrace();
             return null;

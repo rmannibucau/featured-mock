@@ -2,8 +2,9 @@ package com.github.rmannibucau.featuredmock.mock.unmarshaller;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 
 public interface Unmarshaller {
-    <T> T unmarshall(Class<T> clazz, InputStream is) throws IOException;
+    Object unmarshall(Type clazz, InputStream is) throws IOException;
     boolean accept(String extension);
 }

@@ -69,7 +69,7 @@ public final class FeaturedMock {
 
                 for (final Unmarshaller unmarshaller : unmarshallers) {
                     if (unmarshaller.accept(extension)) {
-                        return unmarshaller.unmarshall(method.getReturnType(), new ByteArrayInputStream(slurp));
+                        return unmarshaller.unmarshall(method.getGenericReturnType(), new ByteArrayInputStream(slurp));
                     }
                 }
             }
