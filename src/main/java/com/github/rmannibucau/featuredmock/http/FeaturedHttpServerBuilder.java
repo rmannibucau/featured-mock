@@ -1,8 +1,12 @@
 package com.github.rmannibucau.featuredmock.http;
 
 import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import java.security.SecureRandom;
+import java.util.Collection;
+import java.util.LinkedList;
 
 public class FeaturedHttpServerBuilder {
     private String host = "localhost";
@@ -14,6 +18,7 @@ public class FeaturedHttpServerBuilder {
     private SecureRandom secureRandom;
     private TrustManager[] trustManagers;
     private KeyManager[] keyManagers;
+    private Collection<ContentTypeMapper> mappers = new LinkedList<ContentTypeMapper>();
 
     public FeaturedHttpServerBuilder host(final String host) {
         this.host = host;
@@ -50,7 +55,34 @@ public class FeaturedHttpServerBuilder {
         return this;
     }
 
+    public FeaturedHttpServerBuilder protocol(final String protocol) {
+        this.protocol = protocol;
+        return this;
+    }
+
+    public FeaturedHttpServerBuilder mapper(final ContentTypeMapper mapper) {
+        mappers.add(mapper);
+        return this;
+    }
+
     public FeaturedHttpServer build() {
-        return new DefaultFeaturedHttpServer(host, port, threads, ssl, protocol, secureRandom, trustManagers, keyManagers);
+        final SSLEngine engine;
+        if (ssl) {
+            SSLContext clientContext;
+            try {
+                clientContext = SSLContext.getInstance(protocol);
+                clientContext.init(keyManagers, trustManagers, secureRandom);
+            } catch (final Exception e) {
+                throw new Error(
+                    "Failed to initialize the client-side SSLContext", e);
+            }
+
+            engine = clientContext.createSSLEngine();
+            engine.setUseClientMode(true);
+        } else {
+            engine = null;
+        }
+
+        return new DefaultFeaturedHttpServer(host, port, threads, mappers.toArray(new ContentTypeMapper[mappers.size()]), engine);
     }
 }

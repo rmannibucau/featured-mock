@@ -76,3 +76,6 @@ will be `text/plain`.
 
 Note: if you need to match the same url for two http methods you can prefix your file name with the http method and `-`.
 For instance `GET-foo/bar`.
+
+Note: `com.github.rmannibucau.featuredmock.http.ContentTypeMapper` allows you to change the extension to use
+for a particular request type. It is based on accept header.

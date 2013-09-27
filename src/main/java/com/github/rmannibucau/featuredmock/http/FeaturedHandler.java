@@ -20,10 +20,10 @@ import java.io.InputStream;
 
 @ChannelHandler.Sharable
 class FeaturedHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements Extensions {
-    public static final ChannelHandler INSTANCE = new FeaturedHandler();
+    private final ContentTypeMapper[] mappers;
 
-    private FeaturedHandler() {
-        // no-op
+    public FeaturedHandler(final ContentTypeMapper[] mappers) {
+        this.mappers = mappers;
     }
 
     @Override
@@ -39,13 +39,31 @@ class FeaturedHandler extends SimpleChannelInboundHandler<FullHttpRequest> imple
         final String accept = request.headers().get(HttpHeaders.Names.ACCEPT);
         if (accept != null) {
             for (final String a : accept.split(",")) {
-                for (final String ext : EXTENSIONS) {
-                    if (a.contains(ext.substring(1))) {
-                        stream = findResource(request, ext);
-                        if (stream != null) {
-                            type = "application/" + ext.substring(1); // remove dot
+                if (mappers != null) {
+                    for (final ContentTypeMapper mapper : mappers) {
+                        if (mapper.handle(a)) {
+                            final String extension = mapper.extension(a);
+                            stream = findResource(request, extension);
+                            if (stream == null && extension != null && !extension.startsWith(".")) {
+                                stream = findResource(request, "." + extension);
+                            }
+                            if (stream != null) {
+                                type = mapper.contentType(a);
+                                break;
+                            }
                         }
-                        break;
+                    }
+                }
+
+                if (stream == null) {
+                    for (final String ext : EXTENSIONS) {
+                        if (a.contains(ext.substring(1))) {
+                            stream = findResource(request, ext);
+                            if (stream != null) {
+                                type = "application/" + ext.substring(1); // remove dot
+                            }
+                            break;
+                        }
                     }
                 }
 
@@ -64,6 +82,7 @@ class FeaturedHandler extends SimpleChannelInboundHandler<FullHttpRequest> imple
                 }
             }
         }
+
         if (stream == null) { // try without extension
             stream = findResource(request, "");
             if (stream != null) {

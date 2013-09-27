@@ -7,11 +7,9 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.TrustManager;
+import javax.net.ssl.SSLEngine;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.security.SecureRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,17 +19,12 @@ class DefaultFeaturedHttpServer implements FeaturedHttpServer {
     private final String host;
     private final int port;
     private final int threads;
-    private final boolean ssl;
-    private final String protocol;
-    private final SecureRandom secureRandom;
-    private final TrustManager[] trustManagers;
-    private final KeyManager[] keyManagers;
+    private final ContentTypeMapper[] mappers;
+    private final SSLEngine engine;
 
     private NioEventLoopGroup workerGroup;
 
-    public DefaultFeaturedHttpServer(final String host, final int port, final int threads,
-                                     final boolean ssl, final String protocol, final SecureRandom secureRandom,
-                                     final TrustManager[] trustManagers, final KeyManager[] keyManagers) {
+    public DefaultFeaturedHttpServer(final String host, final int port, final int threads, final ContentTypeMapper[] mappers, final SSLEngine engine) {
         this.host = host;
         if (port <= 0) { // generate a port
             this.port = findNextAvailablePort();
@@ -39,11 +32,8 @@ class DefaultFeaturedHttpServer implements FeaturedHttpServer {
             this.port = port;
         }
         this.threads = Math.max(threads, 1);
-        this.ssl = ssl;
-        this.protocol = protocol;
-        this.secureRandom = secureRandom;
-        this.trustManagers = trustManagers;
-        this.keyManagers = keyManagers;
+        this.engine = engine;
+        this.mappers = mappers;
     }
 
     @Override
@@ -82,7 +72,7 @@ class DefaultFeaturedHttpServer implements FeaturedHttpServer {
                 .option(ChannelOption.TCP_NODELAY, true)
                 .group(workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(new FeaturedChannelInitializer(ssl, protocol, secureRandom, trustManagers, keyManagers))
+                .childHandler(new FeaturedChannelInitializer(mappers, engine))
                 .bind(host, port).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(final ChannelFuture future) throws Exception {
