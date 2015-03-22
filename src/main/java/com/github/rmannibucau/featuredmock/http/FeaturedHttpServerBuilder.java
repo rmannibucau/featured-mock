@@ -16,13 +16,13 @@
  */
 package com.github.rmannibucau.featuredmock.http;
 
+import java.security.SecureRandom;
+import java.util.Collection;
+import java.util.LinkedList;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
-import java.security.SecureRandom;
-import java.util.Collection;
-import java.util.LinkedList;
 
 public class FeaturedHttpServerBuilder {
     private String host = "localhost";
@@ -35,6 +35,12 @@ public class FeaturedHttpServerBuilder {
     private TrustManager[] trustManagers;
     private KeyManager[] keyManagers;
     private Collection<ContentTypeMapper> mappers = new LinkedList<ContentTypeMapper>();
+    private RequestObserver observer;
+
+    public FeaturedHttpServerBuilder observer(final RequestObserver observer) {
+        this.observer = observer;
+        return this;
+    }
 
     public FeaturedHttpServerBuilder host(final String host) {
         this.host = host;
@@ -99,6 +105,8 @@ public class FeaturedHttpServerBuilder {
             engine = null;
         }
 
-        return new DefaultFeaturedHttpServer(host, port, threads, mappers.toArray(new ContentTypeMapper[mappers.size()]), engine);
+        return new DefaultFeaturedHttpServer(
+                host, port, threads,
+                mappers.toArray(new ContentTypeMapper[mappers.size()]), engine, observer);
     }
 }

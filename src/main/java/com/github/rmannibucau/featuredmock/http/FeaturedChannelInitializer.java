@@ -31,13 +31,13 @@ class FeaturedChannelInitializer extends ChannelInitializer<SocketChannel> {
     private final SslHandler sslHandler;
     private final FeaturedHandler handler;
 
-    public FeaturedChannelInitializer(final ContentTypeMapper[] mappers, final SSLEngine engine) {
+    public FeaturedChannelInitializer(final ContentTypeMapper[] mappers, final SSLEngine engine, final RequestObserver observer) {
         if (engine == null) {
             this.sslHandler = null;
         } else {
             this.sslHandler = new SslHandler(engine);
         }
-        this.handler = new FeaturedHandler(mappers);
+        this.handler = new FeaturedHandler(mappers, observer);
     }
 
     @Override

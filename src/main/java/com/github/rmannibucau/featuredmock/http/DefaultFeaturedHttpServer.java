@@ -37,10 +37,13 @@ class DefaultFeaturedHttpServer implements FeaturedHttpServer {
     private final int threads;
     private final ContentTypeMapper[] mappers;
     private final SSLEngine engine;
+    private final RequestObserver observer;
 
     private NioEventLoopGroup workerGroup;
 
-    public DefaultFeaturedHttpServer(final String host, final int port, final int threads, final ContentTypeMapper[] mappers, final SSLEngine engine) {
+    public DefaultFeaturedHttpServer(final String host, final int port, final int threads,
+                                     final ContentTypeMapper[] mappers, final SSLEngine engine,
+                                     final RequestObserver observer) {
         this.host = host;
         if (port <= 0) { // generate a port
             this.port = findNextAvailablePort();
@@ -50,6 +53,7 @@ class DefaultFeaturedHttpServer implements FeaturedHttpServer {
         this.threads = Math.max(threads, 1);
         this.engine = engine;
         this.mappers = mappers;
+        this.observer = observer;
     }
 
     @Override
@@ -88,7 +92,7 @@ class DefaultFeaturedHttpServer implements FeaturedHttpServer {
                 .option(ChannelOption.TCP_NODELAY, true)
                 .group(workerGroup)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(new FeaturedChannelInitializer(mappers, engine))
+                .childHandler(new FeaturedChannelInitializer(mappers, engine, observer))
                 .bind(host, port).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(final ChannelFuture future) throws Exception {

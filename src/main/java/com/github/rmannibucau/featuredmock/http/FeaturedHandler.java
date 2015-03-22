@@ -37,9 +37,11 @@ import java.io.InputStream;
 @ChannelHandler.Sharable
 class FeaturedHandler extends SimpleChannelInboundHandler<FullHttpRequest> implements Extensions {
     private final ContentTypeMapper[] mappers;
+    private final RequestObserver observer;
 
-    public FeaturedHandler(final ContentTypeMapper[] mappers) {
+    public FeaturedHandler(final ContentTypeMapper[] mappers, final RequestObserver observer) {
         this.mappers = mappers;
+        this.observer = observer;
     }
 
     @Override
@@ -109,6 +111,10 @@ class FeaturedHandler extends SimpleChannelInboundHandler<FullHttpRequest> imple
         if (stream == null) {
             sendError(ctx, HttpResponseStatus.NOT_FOUND);
             return;
+        }
+
+        if (observer != null) {
+            observer.onRequest(request);
         }
 
         final byte[] bytes = IOs.slurp(stream);
